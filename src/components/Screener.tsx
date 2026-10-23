@@ -95,6 +95,7 @@ export default function Screener({ stocks, onOpen }: { stocks: Stock[]; onOpen: 
           Export CSV
         </button>
       </div>
+      <div className="table-wrap">
       <table>
         <thead>
           <tr>
@@ -130,6 +131,7 @@ export default function Screener({ stocks, onOpen }: { stocks: Stock[]; onOpen: 
           )}
         </tbody>
       </table>
+      </div>
     </section>
   );
 }

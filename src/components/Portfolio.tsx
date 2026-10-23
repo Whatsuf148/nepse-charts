@@ -68,6 +68,7 @@ export default function Portfolio({ stocks, onOpen }: { stocks: Stock[]; onOpen:
           P/L <b>{pl.toFixed(0)}</b> ({cost ? ((pl / cost) * 100).toFixed(2) : '0.00'}%)
         </div>
       </div>
+      <div className="table-wrap">
       <table>
         <thead>
           <tr>
@@ -107,6 +108,7 @@ export default function Portfolio({ stocks, onOpen }: { stocks: Stock[]; onOpen:
           )}
         </tbody>
       </table>
+      </div>
     </section>
   );
 }

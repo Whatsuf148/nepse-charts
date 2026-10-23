@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import './index.css';
-import type { Candle, Stock } from './types';
+import type { Candle, Drawing, Stock, Tool } from './types';
 import { provider } from './data/provider';
 import { getCandlesCached } from './data/provider';
 import { useLocal } from './lib/useLocal';
@@ -23,6 +23,16 @@ export default function App() {
   const [watch, setWatch] = useLocal<string[]>('watchlist', ['NABIL', 'NTC', 'UPPER']);
   const [overlays, setOverlays] = useLocal<Overlays>('overlays', { sma20: true, sma50: true, ema200: false, bb: false });
   const [pane, setPane] = useLocal<Pane>('pane', 'rsi');
+  const [tool, setTool] = useState<Tool>('none');
+  const [allDrawings, setAllDrawings] = useLocal<Record<string, Drawing[]>>('drawings', {});
+  const drawings = allDrawings[symbol] ?? [];
+  const setDrawings = (d: Drawing[]) => setAllDrawings({ ...allDrawings, [symbol]: d });
+
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setTool('none');
+    window.addEventListener('keydown', esc);
+    return () => window.removeEventListener('keydown', esc);
+  }, []);
 
   useEffect(() => {
     provider.listStocks().then(setStocks).catch((e) => setError(String(e)));
@@ -40,6 +50,7 @@ export default function App() {
 
   const open = (s: string) => {
     setSymbol(s);
+    setTool('none');
     setTab('chart');
     setQuery('');
   };
@@ -136,7 +147,30 @@ export default function App() {
                   <option value="macd">MACD</option>
                 </select>
               </div>
-              <Chart candles={candles} overlays={overlays} pane={pane} />
+              <div className="filters">
+                <span className="muted">Draw:</span>
+                <button className={tool === 'hline' ? 'active' : ''} onClick={() => setTool(tool === 'hline' ? 'none' : 'hline')}>
+                  ― Horizontal
+                </button>
+                <button className={tool === 'trend' ? 'active' : ''} onClick={() => setTool(tool === 'trend' ? 'none' : 'trend')}>
+                  ⟋ Trendline
+                </button>
+                {drawings.length > 0 && <button onClick={() => setDrawings([])}>Clear all ({drawings.length})</button>}
+                {drawings.map((d) => (
+                  <span key={d.id} className="chip">
+                    {d.kind === 'hline' ? `H ${d.price}` : `T ${d.p1}→${d.p2}`}{' '}
+                    <button onClick={() => setDrawings(drawings.filter((x) => x.id !== d.id))}>✕</button>
+                  </span>
+                ))}
+              </div>
+              <Chart
+                candles={candles}
+                overlays={overlays}
+                pane={pane}
+                drawings={drawings}
+                tool={tool}
+                onDraw={(d) => setDrawings([...drawings, d])}
+              />
             </section>
           )}
           {tab === 'compare' && stocks.length > 0 && <Compare stocks={stocks} />}

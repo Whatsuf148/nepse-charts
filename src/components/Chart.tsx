@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   createChart,
   CrosshairMode,
@@ -6,7 +6,7 @@ import {
   type ISeriesApi,
   type Time,
 } from 'lightweight-charts';
-import type { Candle } from '../types';
+import type { Candle, Drawing, Tool } from '../types';
 import { bollinger, ema, macd, rsi, sma } from '../lib/indicators';
 
 export interface Overlays {
@@ -29,13 +29,29 @@ export default function Chart({
   candles,
   overlays,
   pane,
+  drawings,
+  tool,
+  onDraw,
 }: {
   candles: Candle[];
   overlays: Overlays;
   pane: Pane;
+  drawings: Drawing[];
+  tool: Tool;
+  onDraw: (d: Drawing) => void;
 }) {
   const mainRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
+  const onDrawRef = useRef(onDraw);
+  onDrawRef.current = onDraw;
+  const pending = useRef<{ t: string; p: number } | null>(null);
+  const saved = useRef<{ candles: Candle[]; range: { from: number; to: number } | null }>({ candles, range: null });
+  const [hint, setHint] = useState('');
+
+  useEffect(() => {
+    pending.current = null;
+    setHint(tool === 'hline' ? 'Click on the chart to place a horizontal line' : tool === 'trend' ? 'Click the first point of the trendline' : '');
+  }, [tool]);
 
   useEffect(() => {
     if (!mainRef.current || candles.length === 0) return;
@@ -83,6 +99,52 @@ export default function Chart({
       line(b.lower, '#6b7a8c');
     }
 
+    drawings.forEach((d) => {
+      if (d.kind === 'hline') {
+        price.createPriceLine({ price: d.price, color: '#f5c542', lineWidth: 1, lineStyle: 0, axisLabelVisible: true, title: '' });
+      } else if (d.t1 !== d.t2) {
+        const [a, b] = d.t1 < d.t2 ? [[d.t1, d.p1], [d.t2, d.p2]] : [[d.t2, d.p2], [d.t1, d.p1]];
+        const tl = main.addLineSeries({
+          color: '#ff8a65',
+          lineWidth: 2,
+          lastValueVisible: false,
+          priceLineVisible: false,
+          crosshairMarkerVisible: false,
+        });
+        tl.setData([
+          { time: t(a[0] as string), value: a[1] as number },
+          { time: t(b[0] as string), value: b[1] as number },
+        ]);
+      }
+    });
+
+    const el = mainRef.current;
+    const onClick = (e: MouseEvent) => {
+      // Native click rather than the library's: it drops quick successive clicks.
+      const r = el.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      if (x < 0 || x > main.timeScale().width()) return; // ignore the price axis
+      const p = price.coordinateToPrice(y);
+      const bar = main.timeScale().coordinateToTime(x);
+      if (p === null) return;
+      const rounded = Math.round(p * 10) / 10;
+      if (tool === 'hline') {
+        onDrawRef.current({ id: crypto.randomUUID(), kind: 'hline', price: rounded });
+      } else if (typeof bar === 'string') {
+        if (!pending.current) {
+          pending.current = { t: bar, p: rounded };
+          setHint('Click the second point');
+        } else if (pending.current.t !== bar) {
+          const f = pending.current;
+          pending.current = null;
+          setHint('Click the first point of the trendline');
+          onDrawRef.current({ id: crypto.randomUUID(), kind: 'trend', t1: f.t, p1: f.p, t2: bar, p2: rounded });
+        }
+      }
+    };
+    if (tool !== 'none') el.addEventListener('click', onClick);
+
     let sub: IChartApi | null = null;
     if (pane !== 'none' && subRef.current) {
       sub = createChart(subRef.current, { ...dark, height: 160, autoSize: true });
@@ -110,17 +172,25 @@ export default function Chart({
       subChart.timeScale().subscribeVisibleLogicalRangeChange((r) => r && main.timeScale().setVisibleLogicalRange(r));
     }
 
-    main.timeScale().setVisibleLogicalRange({ from: candles.length - 130, to: candles.length + 5 });
+    // keep the user's zoom/pan when only overlays/drawings change
+    main.timeScale().setVisibleLogicalRange(
+      saved.current.candles === candles && saved.current.range
+        ? saved.current.range
+        : { from: candles.length - 130, to: candles.length + 5 },
+    );
 
     return () => {
+      el.removeEventListener('click', onClick);
+      saved.current = { candles, range: main.timeScale().getVisibleLogicalRange() };
       main.remove();
       sub?.remove();
     };
-  }, [candles, overlays, pane]);
+  }, [candles, overlays, pane, drawings, tool]);
 
   return (
     <div>
-      <div ref={mainRef} className="chart-main" />
+      {hint && <div className="hint">{hint}</div>}
+      <div ref={mainRef} className={`chart-main${tool !== 'none' ? ' drawing' : ''}`} />
       {pane !== 'none' && <div ref={subRef} className="chart-sub" />}
     </div>
   );

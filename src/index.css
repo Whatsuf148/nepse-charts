@@ -52,3 +52,34 @@ tr.click:hover { background: #121923; }
 .chip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid; border-radius: 999px; padding: 2px 10px; }
 .chip button { border: none; background: none; padding: 0 2px; }
 button.active { background: #4da3ff; color: #06101a; border-color: #4da3ff; }
+.hint { font-size: 13px; color: #f5c542; margin: 4px 0; }
+.chart-main.drawing { cursor: crosshair; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-wrap table { min-width: 560px; }
+@media (max-width: 760px) {
+  .app { padding: 0 10px 24px; }
+  header { gap: 8px; }
+  nav { width: 100%; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  nav button { flex: 0 0 auto; }
+  button, select, input { min-height: 40px; }
+  .search, .search input { width: 100%; }
+  main { grid-template-columns: 1fr; gap: 8px; }
+  aside h3 { display: none; }
+  aside ul { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  aside li { flex: 0 0 auto; border: 1px solid #243040; gap: 8px; }
+  .chart-main { height: 320px; }
+  .chart-sub { height: 130px; }
+  .filters { gap: 8px; }
+  .hm-tile { min-width: 72px; min-height: 60px; }
+  .summary { flex-wrap: wrap; gap: 12px; }
+}
+label { display: inline-flex; align-items: center; gap: 4px; }
+@media (max-width: 760px) {
+  input[type=checkbox] { min-height: 0; width: 18px; height: 18px; padding: 0; }
+  aside li { padding: 2px 8px; }
+  aside li button, .chip button { min-height: 0; padding: 0 6px; }
+  .title { gap: 8px; }
+  .title h2 { font-size: 16px; margin: 4px 0; }
+  .filters { margin: 4px 0 8px; }
+  .banner { margin-bottom: 6px; }
+}
