@@ -10,10 +10,13 @@ import Portfolio from './components/Portfolio';
 import Alerts from './components/Alerts';
 import Heatmap from './components/Heatmap';
 import Compare from './components/Compare';
+import AccountMenu from './components/AccountMenu';
+import { useSync } from './sync/useSync';
 
 type Tab = 'chart' | 'compare' | 'heatmap' | 'screener' | 'portfolio' | 'alerts';
 
 export default function App() {
+  const sync = useSync();
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [symbol, setSymbol] = useLocal('symbol', 'NABIL');
   const [tab, setTab] = useState<Tab>('chart');
@@ -71,6 +74,7 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <AccountMenu sync={sync} />
         <div className="search">
           <input placeholder="Search symbol or company…" value={query} onChange={(e) => setQuery(e.target.value)} />
           {matches.length > 0 && (

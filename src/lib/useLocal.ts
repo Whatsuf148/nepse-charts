@@ -1,21 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
+import { get, set, subscribe } from './store';
 
-/** useState persisted to localStorage; degrades silently if storage is unavailable. */
+/** Persistent state backed by the shared store (localStorage + optional cloud sync). */
 export function useLocal<T>(key: string, initial: T) {
-  const [v, setV] = useState<T>(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? (JSON.parse(raw) as T) : initial;
-    } catch {
-      return initial;
-    }
-  });
-  useEffect(() => {
-    try {
-      localStorage.setItem(key, JSON.stringify(v));
-    } catch {
-      /* ignore */
-    }
-  }, [key, v]);
-  return [v, setV] as const;
+  const value = useSyncExternalStore(subscribe, () => get(key, initial));
+  const setValue = useCallback(
+    (next: T | ((prev: T) => T)) => set(key, typeof next === 'function' ? (next as (p: T) => T)(get(key, initial)) : next),
+    // `initial` is only used as the first-read default, which the store caches
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [key],
+  );
+  return [value, setValue] as const;
 }

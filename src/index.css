@@ -83,3 +83,16 @@ label { display: inline-flex; align-items: center; gap: 4px; }
   .filters { margin: 4px 0 8px; }
   .banner { margin-bottom: 6px; }
 }
+.account { display: flex; align-items: center; gap: 8px; }
+.account .who { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #6b7a8c; flex: none; }
+.dot.synced { background: #26a69a; } .dot.syncing { background: #f5c542; } .dot.error { background: #ef5350; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+.dialog { background: #121923; border: 1px solid #243040; border-radius: 10px; padding: 20px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 12px; }
+.dialog h2 { margin: 0; }
+.dialog label { flex-direction: column; align-items: stretch; gap: 4px; font-size: 14px; }
+.dialog .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.dialog .error, .dialog .notice { margin: 0; }
+.notice { background: #10261f; color: #7fd8c3; padding: 8px 10px; border-radius: 6px; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 760px) { .account { width: 100%; justify-content: space-between; } }
