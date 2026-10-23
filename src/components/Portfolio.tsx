@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Holding, Stock } from '../types';
 import { getCandlesCached } from '../data/provider';
 import { useLocal } from '../lib/useLocal';
+import { downloadCsv } from '../lib/csv';
 
 export default function Portfolio({ stocks, onOpen }: { stocks: Stock[]; onOpen: (s: string) => void }) {
   const [holdings, setHoldings] = useLocal<Holding[]>('portfolio', []);
@@ -42,6 +43,19 @@ export default function Portfolio({ stocks, onOpen }: { stocks: Stock[]; onOpen:
           Buy price <input type="number" value={buy} onChange={(e) => setBuy(+e.target.value)} />
         </label>
         <button onClick={add}>Add holding</button>
+        <button
+          onClick={() =>
+            downloadCsv('portfolio.csv', [
+              ['symbol', 'qty', 'buy_price', 'ltp', 'pl'],
+              ...holdings.map((h) => {
+                const ltp = prices[h.symbol] ?? h.buyPrice;
+                return [h.symbol, h.qty, h.buyPrice, ltp.toFixed(1), ((ltp - h.buyPrice) * h.qty).toFixed(0)];
+              }),
+            ])
+          }
+        >
+          Export CSV
+        </button>
       </div>
       <div className="summary">
         <div>

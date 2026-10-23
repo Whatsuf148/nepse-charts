@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Stock } from '../types';
 import { getCandlesCached } from '../data/provider';
 import { rsi, sma, last } from '../lib/indicators';
+import { downloadCsv } from '../lib/csv';
 
 interface Row {
   stock: Stock;
@@ -83,6 +84,16 @@ export default function Screener({ stocks, onOpen }: { stocks: Stock[]; onOpen: 
         <button onClick={() => (setMinRsi(0), setMaxRsi(30))}>Oversold</button>
         <button onClick={() => (setMinRsi(70), setMaxRsi(100))}>Overbought</button>
         <button onClick={() => (setMinRsi(0), setMaxRsi(100), setMinVol(0), setAboveSma(false))}>Reset</button>
+        <button
+          onClick={() =>
+            downloadCsv('screener.csv', [
+              ['symbol', 'sector', 'close', 'change_pct', 'rsi', 'vs_sma50_pct', 'vol_x_avg'],
+              ...view.map((r) => [r.stock.symbol, r.stock.sector, r.close, r.changePct.toFixed(2), r.rsi.toFixed(1), r.vsSma50.toFixed(2), r.volRatio.toFixed(2)]),
+            ])
+          }
+        >
+          Export CSV
+        </button>
       </div>
       <table>
         <thead>

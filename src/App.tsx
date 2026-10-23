@@ -8,8 +8,10 @@ import Chart, { type Overlays, type Pane } from './components/Chart';
 import Screener from './components/Screener';
 import Portfolio from './components/Portfolio';
 import Alerts from './components/Alerts';
+import Heatmap from './components/Heatmap';
+import Compare from './components/Compare';
 
-type Tab = 'chart' | 'screener' | 'portfolio' | 'alerts';
+type Tab = 'chart' | 'compare' | 'heatmap' | 'screener' | 'portfolio' | 'alerts';
 
 export default function App() {
   const [stocks, setStocks] = useState<Stock[]>([]);
@@ -52,7 +54,7 @@ export default function App() {
       <header>
         <h1>NEPSE Charts</h1>
         <nav>
-          {(['chart', 'screener', 'portfolio', 'alerts'] as Tab[]).map((t) => (
+          {(['chart', 'compare', 'heatmap', 'screener', 'portfolio', 'alerts'] as Tab[]).map((t) => (
             <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>
               {t}
             </button>
@@ -137,6 +139,8 @@ export default function App() {
               <Chart candles={candles} overlays={overlays} pane={pane} />
             </section>
           )}
+          {tab === 'compare' && stocks.length > 0 && <Compare stocks={stocks} />}
+          {tab === 'heatmap' && stocks.length > 0 && <Heatmap stocks={stocks} onOpen={open} />}
           {tab === 'screener' && stocks.length > 0 && <Screener stocks={stocks} onOpen={open} />}
           {tab === 'portfolio' && stocks.length > 0 && <Portfolio stocks={stocks} onOpen={open} />}
           {tab === 'alerts' && stocks.length > 0 && <Alerts stocks={stocks} />}
